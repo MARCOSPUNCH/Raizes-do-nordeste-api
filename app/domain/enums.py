@@ -1,5 +1,6 @@
 from enum import StrEnum
 
+
 class CanalPedido(StrEnum):
     APP = "APP"
     TOTEM = "TOTEM"
@@ -29,8 +30,3 @@ class PerfilUsuario(StrEnum):
     COZINHA = "COZINHA"
     GERENTE = "GERENTE"
     MATRIZ = "MATRIZ"
-
-
-class TipoMovimentoPontos(StrEnum):
-    CREDITO = "CREDITO"
-    ESTORNO = "ESTORNO"
