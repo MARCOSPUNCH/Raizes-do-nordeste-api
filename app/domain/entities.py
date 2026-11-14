@@ -8,12 +8,15 @@ from app.domain.exceptions import (
     TransicaoInvalida,
 )
 
+
 TRANSICOES = {
     StatusPedido.AGUARDANDO_PAGAMENTO: [
-        StatusPedido.PAGO, StatusPedido.CANCELADO
+        StatusPedido.PAGO,
+        StatusPedido.CANCELADO
     ],
     StatusPedido.PAGO: [
-        StatusPedido.EM_PREPARO, StatusPedido.CANCELADO
+        StatusPedido.EM_PREPARO,
+        StatusPedido.CANCELADO
     ],
     StatusPedido.EM_PREPARO: [StatusPedido.PRONTO],
     StatusPedido.PRONTO: [StatusPedido.RETIRADO],
@@ -24,6 +27,9 @@ TRANSICOES = {
 
 class ItemPedido:
     def __init__(self, id_produto, quantidade, preco_unitario):
+        if isinstance(quantidade, bool) or not isinstance(quantidade, int):
+            raise ValorInvalido("Quantidade deve ser um número inteiro.")
+
         self.preco_unitario = Decimal(str(preco_unitario))
 
         if quantidade <= 0 or self.preco_unitario <= 0:
@@ -45,20 +51,29 @@ class Pedido:
         except (ValueError, TypeError):
             raise ValorInvalido("Canal de pedido inválido.")
 
-        if not chave_idempotencia or not itens:
-            raise ValorInvalido("Chave e itens são obrigatórios.")
+        if not isinstance(chave_idempotencia, str) or not chave_idempotencia.strip():
+            raise ValorInvalido("Chave de idempotência obrigatória.")
+
+        if not itens:
+            raise ValorInvalido("Pedido deve possuir pelo menos um item.")
+
+        if not all(isinstance(item, ItemPedido) for item in itens):
+            raise ValorInvalido("Itens do pedido inválidos.")
 
         if (self.canal_pedido == CanalPedido.BALCAO) != (id_atendente is not None):
             raise ValorInvalido("Atendente obrigatório somente no balcão.")
 
         self.id_unidade = id_unidade
         self.chave_idempotencia = chave_idempotencia
-        self.itens = itens
+        self.itens = list(itens)
         self.id_usuario = id_usuario
         self.id_atendente = id_atendente
         self.status = StatusPedido.AGUARDANDO_PAGAMENTO
+        self.motivo_cancelamento = None
+
         self.valor_total = sum(
-            (item.subtotal() for item in itens), Decimal("0.00")
+            (item.subtotal() for item in self.itens),
+            Decimal("0.00")
         )
 
     def mudar_status(self, novo_status):
@@ -73,10 +88,11 @@ class Pedido:
         self.status = novo_status
 
     def cancelar(self, motivo):
-        if not motivo or not motivo.strip():
+        if not isinstance(motivo, str) or not motivo.strip():
             raise ValorInvalido("Motivo do cancelamento obrigatório.")
 
         self.mudar_status(StatusPedido.CANCELADO)
+        self.motivo_cancelamento = motivo.strip()
 
 
 class Estoque:
@@ -98,6 +114,7 @@ class Estoque:
 
         if quantidade <= 0:
             raise ValorInvalido("Quantidade deve ser positiva.")
+
         if quantidade > self.disponivel():
             raise EstoqueInsuficiente("Estoque insuficiente.")
 
@@ -120,6 +137,14 @@ class Estoque:
         self.quantidade_atual -= quantidade
         self.quantidade_reservada -= quantidade
 
+    def devolver(self, quantidade):
+        quantidade = Decimal(str(quantidade))
+
+        if quantidade <= 0:
+            raise ValorInvalido("Quantidade deve ser positiva.")
+
+        self.quantidade_atual += quantidade
+
 
 class Pagamento:
     def __init__(self, id_pedido, chave_idempotencia, valor):
@@ -127,6 +152,9 @@ class Pagamento:
 
         if self.valor <= 0:
             raise ValorInvalido("Valor do pagamento deve ser positivo.")
+
+        if not isinstance(chave_idempotencia, str) or not chave_idempotencia.strip():
+            raise ValorInvalido("Chave de idempotência obrigatória.")
 
         self.id_pedido = id_pedido
         self.chave_idempotencia = chave_idempotencia
@@ -144,6 +172,7 @@ class Pagamento:
             StatusPagamento.APROVADO if aprovado
             else StatusPagamento.NEGADO
         )
+
         self.id_transacao_gateway = id_transacao
 
 
