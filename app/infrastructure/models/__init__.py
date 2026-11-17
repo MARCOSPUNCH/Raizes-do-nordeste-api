@@ -6,3 +6,6 @@ from app.infrastructure.models.user import User
 from app.infrastructure.models.order import Order
 from app.infrastructure.models.stock import Stock
 from app.infrastructure.models.stock_movement import StockMovement
+from app.infrastructure.models.order_item import OrderItem
+from app.infrastructure.models.payment import Payment
+from app.infrastructure.models.product_ingredient import ProductIngredient

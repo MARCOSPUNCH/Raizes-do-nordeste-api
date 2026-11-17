@@ -21,7 +21,7 @@ class StatusPedido(StrEnum):
 class StatusPagamento(StrEnum):
     PENDENTE = "PENDENTE"
     APROVADO = "APROVADO"
-    NEGADO = "NEGADO"
+    RECUSADO = "RECUSADO"
 
 
 class PerfilUsuario(StrEnum):

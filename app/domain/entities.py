@@ -1,4 +1,3 @@
-
 from decimal import Decimal
 
 from app.domain.enums import CanalPedido, StatusPedido, StatusPagamento
@@ -170,7 +169,7 @@ class Pagamento:
 
         self.status = (
             StatusPagamento.APROVADO if aprovado
-            else StatusPagamento.NEGADO
+            else StatusPagamento.RECUSADO
         )
 
         self.id_transacao_gateway = id_transacao

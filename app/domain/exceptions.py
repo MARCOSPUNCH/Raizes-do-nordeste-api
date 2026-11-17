@@ -1,4 +1,3 @@
-
 class DomainError(Exception):
     """Exceção base para erros das regras de negócio."""
 
