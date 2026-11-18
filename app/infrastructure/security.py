@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta, timezone
 
 from jose import jwt
@@ -9,8 +10,9 @@ from sqlalchemy.orm import Session
 from app.infrastructure.database import get_db
 from app.infrastructure.models.user import User
 
-
-SECRET_KEY = "raizes_nordeste_chave_secreta_2026"
+# Em produção, defina a variável de ambiente SECRET_KEY com um valor novo e
+# secreto. O valor padrão abaixo serve apenas para desenvolvimento local.
+SECRET_KEY = os.getenv("SECRET_KEY", "chave-apenas-para-desenvolvimento")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
@@ -74,7 +76,6 @@ def obter_usuario_atual(
     try:
         dados = verificar_token(token.credentials)
         usuario_id = int(dados.get("sub"))
-
     except Exception:
         raise erro
 
